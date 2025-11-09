@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "35182308029",
+    "project_id": "ltdd-nhoms02-smartshop",
+    "storage_bucket": "ltdd-nhoms02-smartshop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:35182308029:android:824bd00e1d385c63f8e5d4",
+        "android_client_info": {
+          "package_name": "com.Smartshop_nhom02"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB71fg2sOxYPLd7BJdkkLOjEX6v9Q_k5LI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
