@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:35182308029:android:824bd00e1d385c63f8e5d4",
+        "mobilesdk_app_id": "1:35182308029:android:2dacef8c8f3c8a82f8e5d4",
         "android_client_info": {
-          "package_name": "com.Smartshop_nhom02"
+          "package_name": "com.example.smartshop"
         }
       },
       "oauth_client": [],

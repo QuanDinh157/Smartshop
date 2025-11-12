@@ -1,82 +1,70 @@
 import 'package:flutter/material.dart';
-import 'sent_mail_screen.dart';
+import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
-
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final TextEditingController _emailController = TextEditingController();
+  final _email = TextEditingController();
+  final _form = GlobalKey<FormState>();
+  bool _loading = false;
+  final AuthService _auth = AuthService();
+
+  void _sendReset() async {
+    if (!_form.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await _auth.sendPasswordReset(_email.text.trim());
+      // navigate to sent mail screen
+      Navigator.pushReplacementNamed(context, '/sent');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, iconTheme: IconThemeData(color: Colors.black)),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: EdgeInsets.all(18),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 30),
-            const Text(
-              'Quên mật khẩu',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Nhập email để đặt lại mật khẩu của bạn',
-              style: TextStyle(color: Colors.black54, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-
-            // Email input
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Nhập email của bạn',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // Button Tiếp tục
-            ElevatedButton(
-              onPressed: () {
-                if (_emailController.text.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SentMailScreen()),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng nhập email')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0E81F7),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Tiếp tục',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+            SizedBox(height: 6),
+            Text('Quên mật khẩu', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('Nhập email của bạn để nhận đường dẫn đặt lại mật khẩu', style: TextStyle(color: Colors.grey[600])),
+            SizedBox(height: 18),
+            Form(
+              key: _form,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _email,
+                    decoration: InputDecoration(labelText: 'Nhập Email của bạn', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
+                    validator: (v) => v != null && v.contains('@') ? null : 'Email không hợp lệ',
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _sendReset,
+                      child: _loading ? CircularProgressIndicator(color: Colors.white) : Text('Tiếp tục'),
+                      style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14)),
+                    ),
+                  )
+                ],
               ),
             ),
           ],

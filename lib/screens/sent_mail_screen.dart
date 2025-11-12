@@ -1,47 +1,27 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 
 class SentMailScreen extends StatelessWidget {
-  const SentMailScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/images/mail.png', width: 140),
-            const SizedBox(height: 30),
-            const Text(
-              'Email đặt lại mật khẩu đã được gửi đến bạn',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 30),
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, iconTheme: IconThemeData(color: Colors.black)),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 28),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.send_rounded, size: 96, color: primaryBlue),
+            SizedBox(height: 18),
+            Text('Email đặt lại mật khẩu đã được gửi đến bạn', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            SizedBox(height: 18),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                );
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0E81F7),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Quay lại trang đăng nhập',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ],
+              child: Text('Quay lại trang đăng nhập'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18)),
+            )
+          ]),
         ),
       ),
     );
