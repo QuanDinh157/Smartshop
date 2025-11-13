@@ -1,27 +1,43 @@
 import 'package:flutter/material.dart';
 
 class SentMailScreen extends StatelessWidget {
+  const SentMailScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = Theme.of(context).primaryColor;
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, iconTheme: IconThemeData(color: Colors.black)),
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.send_rounded, size: 96, color: primaryBlue),
-            SizedBox(height: 18),
-            Text('Email đặt lại mật khẩu đã được gửi đến bạn', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              },
-              child: Text('Quay lại trang đăng nhập'),
-              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18)),
-            )
-          ]),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/google.png', width: 90),
+                const SizedBox(height: 32),
+                const Icon(Icons.mail_outline, size: 80, color: Colors.orange),
+                const SizedBox(height: 24),
+                const Text(
+                  'Email đặt lại mật khẩu đã được gửi đến bạn',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A75AD),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                  child: const Text('Quay lại trang đăng nhập'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

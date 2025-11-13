@@ -5,6 +5,13 @@ allprojects {
     }
 }
 
+buildscript {
+    dependencies {
+        classpath("com.google.gms:google-services:4.4.0") // hoặc mới hơn
+    }
+}
+
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

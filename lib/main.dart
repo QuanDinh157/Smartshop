@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:smartshop/screens/home_screen.dart';
 import 'screens/loading_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -8,30 +9,30 @@ import 'screens/sent_mail_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // nếu bạn đã config Firebase bên ngoài, để nguyên
-  runApp(MyApp());
+  await Firebase.initializeApp();
+  runApp(const SmartShopApp());
 }
 
-class MyApp extends StatelessWidget {
-  final Color primaryBlue = const Color(0xFF0A66C2); // chỉnh nếu cần
+class SmartShopApp extends StatelessWidget {
+  const SmartShopApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SmartShop Auth',
+      debugShowCheckedModeBanner: false,
+      title: 'SmartShop',
       theme: ThemeData(
-        primaryColor: primaryBlue,
-        colorScheme: ColorScheme.fromSwatch().copyWith(secondary: primaryBlue),
-        scaffoldBackgroundColor: Colors.white,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        useMaterial3: true,
       ),
       initialRoute: '/loading',
       routes: {
-        '/loading': (_) => LoadingScreen(),
-        '/login': (_) => LoginScreen(),
-        '/register': (_) => RegisterScreen(),
-        '/forgot': (_) => ForgotPasswordScreen(),
-        '/sent': (_) => SentMailScreen(),
+        '/loading': (_) => const LoadingScreen(),
+        '/login': (_) => const LoginScreen(),
+        '/register': (_) => const RegisterScreen(),
+        '/forgot': (_) => const ForgotPasswordScreen(),
+        '/sent': (_) => const SentMailScreen(),
+        '/home': (_) => const HomeScreen(),
       },
     );
   }

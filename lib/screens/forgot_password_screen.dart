@@ -2,72 +2,66 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
+
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _email = TextEditingController();
-  final _form = GlobalKey<FormState>();
-  bool _loading = false;
-  final AuthService _auth = AuthService();
+  final _emailController = TextEditingController();
+  final _authService = AuthService();
 
-  void _sendReset() async {
-    if (!_form.currentState!.validate()) return;
-    setState(() => _loading = true);
+  Future<void> _sendResetEmail() async {
     try {
-      await _auth.sendPasswordReset(_email.text.trim());
-      // navigate to sent mail screen
+      await _authService.sendPasswordReset(_emailController.text.trim());
       Navigator.pushReplacementNamed(context, '/sent');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
-    } finally {
-      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
     }
   }
 
   @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final primaryBlue = Theme.of(context).primaryColor;
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, iconTheme: IconThemeData(color: Colors.black)),
-      body: Padding(
-        padding: EdgeInsets.all(18),
-        child: Column(
-          children: [
-            SizedBox(height: 6),
-            Text('Quên mật khẩu', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('Nhập email của bạn để nhận đường dẫn đặt lại mật khẩu', style: TextStyle(color: Colors.grey[600])),
-            SizedBox(height: 18),
-            Form(
-              key: _form,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _email,
-                    decoration: InputDecoration(labelText: 'Nhập Email của bạn', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
-                    validator: (v) => v != null && v.contains('@') ? null : 'Email không hợp lệ',
-                  ),
-                  SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _sendReset,
-                      child: _loading ? CircularProgressIndicator(color: Colors.white) : Text('Tiếp tục'),
-                      style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14)),
-                    ),
-                  )
-                ],
+      appBar: AppBar(
+        leading: BackButton(color: Colors.black),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Quên mật khẩu',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Nhập Email của bạn',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _sendResetEmail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A75AD),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: const Text('Tiếp tục'),
+              ),
+            ],
+          ),
         ),
       ),
     );

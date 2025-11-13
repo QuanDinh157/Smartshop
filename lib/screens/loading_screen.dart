@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
+  const LoadingScreen({super.key});
+
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
 }
@@ -10,8 +11,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    // Giả lập splash, sau đó navigate tới login
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
@@ -19,28 +19,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0A66C2), Color(0xFF6FB1E8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
+      backgroundColor: const Color(0xFF0A75AD),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/online-shoping.png', width: 120),
+            const SizedBox(height: 16),
+            const Text(
+              'SmartShop',
+              style: TextStyle(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
               ),
-              child: Icon(Icons.shopping_cart, size: 56, color: Color(0xFF0A66C2)),
             ),
-            SizedBox(height: 16),
-            Text('SmartShop', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          ]),
+          ],
         ),
       ),
     );
