@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/product_card.dart'; // Import card sản phẩm đã tách
-import 'home_screen.dart' hide ProductCard; // <-- Import để lấy danh sách allProducts
+import '../widgets/product_card.dart';
+import 'home_screen.dart' hide ProductCard;
 
 class WishlistScreen extends StatelessWidget {
-  // Nhận 2 tham số từ HomeScreen
+
   final Set<String> likedProductIds;
   final Function(String) onFavoriteToggle;
 
@@ -15,7 +15,6 @@ class WishlistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lọc ra danh sách sản phẩm YÊU THÍCH
     final List<Map<String, dynamic>> favoriteProducts = allProducts
         .where((product) => likedProductIds.contains(product['id']))
         .toList();
@@ -28,13 +27,12 @@ class WishlistScreen extends StatelessWidget {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
-        elevation: 1, // Thêm đường viền mờ
+        elevation: 1,
         centerTitle: false,
       ),
-      // --- SỬA LOGIC KIỂM TRA RỖNG ---
       body: favoriteProducts.isEmpty
-          ? _buildEmptyWishlist() // Hiển thị nếu rỗng
-          : _buildWishlistGrid(favoriteProducts), // Hiển thị nếu có
+          ? _buildEmptyWishlist()
+          : _buildWishlistGrid(favoriteProducts),
     );
   }
 
@@ -101,22 +99,20 @@ class WishlistScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hiển thị số lượng sản phẩm được tìm thấy
           Text(
             '${favoriteProducts.length} Sản phẩm được tìm thấy.',
             style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
           const SizedBox(height: 16),
-          // Dùng GridView.builder để tạo lưới 2 cột
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: favoriteProducts.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // 2 cột
+              crossAxisCount: 2,
               crossAxisSpacing: 10.0,
               mainAxisSpacing: 10.0,
-              childAspectRatio: 0.65, // Tỉ lệ (Rộng / Cao)
+              childAspectRatio: 0.65,
             ),
             itemBuilder: (context, index) {
               final product = favoriteProducts[index];
@@ -127,9 +123,8 @@ class WishlistScreen extends StatelessWidget {
                 price: product['price'],
                 discount: product['discount'],
                 discountColor: product['discountColor'],
-                isFavorite: true, // 100% là true vì đây là màn hình Yêu thích
+                isFavorite: true,
                 onFavoriteToggle: () {
-                  // Gọi hàm ở HomeScreen để xóa
                   onFavoriteToggle(product['id']);
                 },
               );

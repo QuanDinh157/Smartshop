@@ -15,30 +15,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
-  // --- BẮT ĐẦU PHẦN SỬA ---
+
   Future<void> _register() async {
     try {
-      // 1. Chờ đăng ký thành công
+
       await _authService.registerWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      // 2. Kiểm tra context an toàn trước khi điều hướng
-      if (!context.mounted) return; // Nếu widget không còn, thoát ra
 
-      // 3. Chỉ điều hướng đến '/home'
+      if (!context.mounted) return;
+
+
       Navigator.pushReplacementNamed(context, '/home');
 
     } catch (e) {
-      // 4. Kiểm tra context an toàn trước khi hiển thị SnackBar
+
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Đăng ký thất bại: $e')),
       );
     }
   }
-  // --- KẾT THÚC PHẦN SỬA ---
+
 
   @override
   Widget build(BuildContext context) {

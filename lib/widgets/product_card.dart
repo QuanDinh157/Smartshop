@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 /// Tách ra file riêng để dùng chung
 class ProductCard extends StatelessWidget {
   final String imageUrl, name, category, price, discount;
-  final Color discountColor; // Thêm màu cho tag
+  final Color discountColor;
 
-  // --- NÂNG CẤP ĐỂ XỬ LÝ "TIM" ---
-  final bool isFavorite; // Trạng thái tim (đỏ hay không)
-  final VoidCallback onFavoriteToggle; // Hàm gọi khi bấm tim
+
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
 
   const ProductCard({
     super.key,
@@ -18,16 +18,14 @@ class ProductCard extends StatelessWidget {
     required this.price,
     required this.discount,
     required this.discountColor,
-    required this.isFavorite, // Bắt buộc
-    required this.onFavoriteToggle, // Bắt buộc
+    required this.isFavorite,
+    required this.onFavoriteToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    // --- BẮT ĐẦU LOGIC "THÔNG MINH" (V2.15) ---
     Widget imageWidget;
     if (imageUrl.startsWith('http')) {
-      // Nếu là link internet (https://...)
       imageWidget = Image.network(
         imageUrl,
         fit: BoxFit.cover,
@@ -42,7 +40,7 @@ class ProductCard extends StatelessWidget {
         },
       );
     } else {
-      // Nếu là link local (assets/...)
+
       imageWidget = Image.asset(
         imageUrl,
         fit: BoxFit.cover,
@@ -53,10 +51,10 @@ class ProductCard extends StatelessWidget {
         },
       );
     }
-    // --- KẾT THÚC LOGIC "THÔNG MINH" ---
+
 
     return Container(
-      // 1. Thẻ Card bên ngoài
+
       decoration: BoxDecoration(
         color: const Color(0xFF0857A0).withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -69,12 +67,11 @@ class ProductCard extends StatelessWidget {
         ],
       ),
       child: Stack(
-        clipBehavior: Clip.none, // Cho phép các nút lồi ra
+        clipBehavior: Clip.none,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 2. Khung ảnh bên trong
               Container(
                 height: 140,
                 width: double.infinity,
@@ -85,17 +82,15 @@ class ProductCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: imageWidget, // <-- Dùng widget "thông minh" ở đây
+                  child: imageWidget,
                 ),
               ),
 
-              // 3. Thông tin sản phẩm
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 4. Dòng Category + Dấu tick
                     Row(
                       children: [
                         Text(
@@ -111,7 +106,6 @@ class ProductCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    // 5. Tên sản phẩm
                     Text(
                       name,
                       style: const TextStyle(
@@ -140,20 +134,20 @@ class ProductCard extends StatelessWidget {
             ],
           ),
 
-          // 7. Tag giảm giá (sửa màu)
+
           Positioned(
             top: 12,
             left: 12,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: discountColor, // Dùng màu truyền vào
+                color: discountColor,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 discount,
                 style: const TextStyle(
-                  color: Colors.black, // Chữ đen
+                  color: Colors.black,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
@@ -161,7 +155,6 @@ class ProductCard extends StatelessWidget {
             ),
           ),
 
-          // 8. Nút Yêu thích (ĐÃ NÂNG CẤP)
           Positioned(
             top: 8,
             right: 8,
@@ -179,19 +172,19 @@ class ProductCard extends StatelessWidget {
                 ],
               ),
               child: IconButton(
-                // Thay đổi icon dựa trên isFavorite
+
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: isFavorite ? Colors.red : Colors.grey[800],
                   size: 20,
                 ),
-                onPressed: onFavoriteToggle, // Gọi hàm callback
+                onPressed: onFavoriteToggle,
                 visualDensity: VisualDensity.compact,
               ),
             ),
           ),
 
-          // 9. Nút Thêm (sửa màu và vị trí)
+
           Positioned(
             bottom: 8,
             right: 8,
@@ -199,8 +192,8 @@ class ProductCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF333333), // Màu đen/xám đậm
-                borderRadius: BorderRadius.circular(12), // Bo góc
+                color: const Color(0xFF333333),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
                 icon: const Icon(Icons.add, color: Colors.white, size: 20),
