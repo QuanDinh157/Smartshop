@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// 1. THÊM IMPORT NÀY
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 
 // --- IMPORT CÁC WIDGET & SCREEN KHÁC ---
-import '../widgets/product_card.dart';    // Thẻ sản phẩm
-import '../widgets/chatbot_widget.dart';  // <--- MỚI: Chatbot Widget
-import 'wishlist_screen.dart';            // Màn hình yêu thích
-import 'product_detail_screen.dart';      // Màn hình chi tiết
-import 'cart_screen.dart';                // Màn hình giỏ hàng
-import 'profile_screen.dart';             // Màn hình User Info
-import 'search_screen.dart';              // Màn hình tìm kiếm
+import '../widgets/product_card.dart';
+import '../widgets/chatbot_widget.dart';
+import 'wishlist_screen.dart';
+import 'product_detail_screen.dart';
+import 'cart_screen.dart';
+import 'profile_screen.dart';
+import 'search_screen.dart';
 
-// Dữ liệu mẫu (Đã chuẩn hóa Category cho khớp với Search)
+// Dữ liệu mẫu (Giữ nguyên)
 final List<Map<String, dynamic>> allProducts = [
   {
     'id': 'p1',
@@ -112,19 +114,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _screens = [
-      // Tab 0: Trang chủ
       _HomeScreenContent(
         likedProductIds: _likedProductIds,
         onFavoriteToggle: _toggleFavorite,
       ),
-      // Tab 1: Yêu thích
       WishlistScreen(
         likedProductIds: _likedProductIds,
         onFavoriteToggle: _toggleFavorite,
       ),
-      // Tab 2: Giỏ hàng
       const CartScreen(),
-      // Tab 3: Tài khoản
       const ProfileScreen(),
     ];
   }
@@ -140,13 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     return Scaffold(
       backgroundColor: Colors.white,
-      // --- SỬA Ở ĐÂY: Dùng Stack để đè ChatBot lên trên ---
       body: Stack(
         children: [
-          // Lớp dưới: Nội dung chính (Home, Cart, Profile...)
           _screens[_selectedIndex],
-
-          // Lớp trên: ChatBot Widget (Luôn nổi)
           const ChatBotWidget(),
         ],
       ),
@@ -172,56 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildNavItem(
-              selectedIcon: Icons.home,
-              unselectedIcon: Icons.home_outlined,
-              label: 'Home',
-              index: 0,
-            ),
-            _buildNavItem(
-              selectedIcon: Icons.favorite,
-              unselectedIcon: Icons.favorite_border,
-              label: 'Yêu thích',
-              index: 1,
-            ),
-            _buildNavItem(
-              selectedIcon: Icons.shopping_cart,
-              unselectedIcon: Icons.shopping_cart_outlined,
-              label: 'Giỏ hàng',
-              index: 2,
-            ),
-            _buildNavItem(
-              selectedIcon: Icons.person,
-              unselectedIcon: Icons.person_outline,
-              label: 'Tài khoản',
-              index: 3,
-            ),
+            _buildNavItem(selectedIcon: Icons.home, unselectedIcon: Icons.home_outlined, label: 'Home', index: 0),
+            _buildNavItem(selectedIcon: Icons.favorite, unselectedIcon: Icons.favorite_border, label: 'Yêu thích', index: 1),
+            _buildNavItem(selectedIcon: Icons.shopping_cart, unselectedIcon: Icons.shopping_cart_outlined, label: 'Giỏ hàng', index: 2),
+            _buildNavItem(selectedIcon: Icons.person, unselectedIcon: Icons.person_outline, label: 'Tài khoản', index: 3),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem({
-    required IconData selectedIcon,
-    required IconData unselectedIcon,
-    required String label,
-    required int index,
-  }) {
+  Widget _buildNavItem({required IconData selectedIcon, required IconData unselectedIcon, required String label, required int index}) {
     final bool isSelected = _selectedIndex == index;
-    final Icon icon = Icon(
-      isSelected ? selectedIcon : unselectedIcon,
-      color: isSelected ? Colors.black : Colors.grey.shade600,
-      size: 24,
-    );
-    final Text text = Text(
-      label,
-      style: TextStyle(
-        color: isSelected ? Colors.black : Colors.grey.shade600,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        fontSize: 12,
-      ),
-    );
+    final Icon icon = Icon(isSelected ? selectedIcon : unselectedIcon, color: isSelected ? Colors.black : Colors.grey.shade600, size: 24);
+    final Text text = Text(label, style: TextStyle(color: isSelected ? Colors.black : Colors.grey.shade600, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 12));
 
     if (isSelected) {
       return InkWell(
@@ -229,33 +187,24 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F0F5),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [icon, const SizedBox(width: 8), text],
-          ),
+          decoration: BoxDecoration(color: const Color(0xFFF1F0F5), borderRadius: BorderRadius.circular(20)),
+          child: Row(children: [icon, const SizedBox(width: 8), text]),
         ),
       );
     }
-
     return InkWell(
       onTap: () => _onItemTapped(index),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(8),
         color: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [icon, const SizedBox(height: 4), text],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [icon, const SizedBox(height: 4), text]),
       ),
     );
   }
 }
 
-// --- NỘI DUNG TRANG CHỦ ---
+// --- NỘI DUNG TRANG CHỦ (ĐÃ TÍCH HỢP REMOTE CONFIG) ---
 class _HomeScreenContent extends StatefulWidget {
   final Set<String> likedProductIds;
   final Function(String) onFavoriteToggle;
@@ -274,6 +223,9 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   int _currentPage = 0;
   Timer? _timer;
 
+  // 2. BIẾN ĐIỀU KHIỂN BANNER
+  bool _showDiscountBanner = false;
+
   final List<String> _bannerImages = [
     'assets/banners/small_banner.png',
     'assets/banners/small_banner02.png',
@@ -284,6 +236,31 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   void initState() {
     super.initState();
     _startBannerAutoScroll();
+    _initRemoteConfig(); // 3. GỌI HÀM CẤU HÌNH
+  }
+
+  // 4. HÀM LẤY CONFIG TỪ FIREBASE
+  Future<void> _initRemoteConfig() async {
+    final remoteConfig = FirebaseRemoteConfig.instance;
+    await remoteConfig.setConfigSettings(RemoteConfigSettings(
+      fetchTimeout: const Duration(minutes: 1),
+      minimumFetchInterval: const Duration(seconds: 1),
+    ));
+
+    // Giá trị mặc định (khi chưa có mạng)
+    await remoteConfig.setDefaults({'show_discount': false});
+
+    try {
+      await remoteConfig.fetchAndActivate();
+      if (mounted) {
+        setState(() {
+          // 'show_discount' phải trùng với tên bạn đặt trên Web Firebase
+          _showDiscountBanner = remoteConfig.getBool('show_discount');
+        });
+      }
+    } catch (e) {
+      print('Lỗi Remote Config: $e');
+    }
   }
 
   @override
@@ -301,11 +278,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         _currentPage = 0;
       }
       if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeIn,
-        );
+        _pageController.animateToPage(_currentPage, duration: const Duration(milliseconds: 400), curve: Curves.easeIn);
       }
     });
   }
@@ -316,6 +289,20 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       child: Column(
         children: [
           _buildHeader(context),
+
+          // 5. HIỂN THỊ BANNER NẾU ĐƯỢC BẬT
+          if (_showDiscountBanner)
+            Container(
+              width: double.infinity,
+              color: Colors.red,
+              padding: const EdgeInsets.all(10),
+              child: const Text(
+                "🔥 GIẢM GIÁ 50% TOÀN BỘ SẢN PHẨM HÔM NAY! 🔥",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+
           _buildBody(context),
         ],
       ),
@@ -355,28 +342,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       clipBehavior: Clip.none,
       children: [
         Positioned(
-          top: -150,
-          right: -140,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-            ),
-          ),
+          top: -150, right: -140,
+          child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.1))),
         ),
         Positioned(
-          top: 50,
-          right: -110,
-          child: Container(
-            width: 230,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
-            ),
-          ),
+          top: 50, right: -110,
+          child: Container(width: 230, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.2))),
         ),
         SafeArea(
           child: Padding(
@@ -391,39 +362,19 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Chào Buổi Sáng',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        Text(
-                          'SmartShop',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Text('Chào Buổi Sáng', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                        Text('SmartShop', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
                       child: const Icon(Icons.shopping_bag_outlined, color: Colors.white),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Danh Mục Sản Phẩm',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                const Text('Danh Mục Sản Phẩm', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 15),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -451,24 +402,15 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       child: Container(
         height: 55.0,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          color: Colors.white, borderRadius: BorderRadius.circular(15.0),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
         ),
         child: const TextField(
           enabled: false,
           decoration: InputDecoration(
-            hintText: 'Tìm kiếm',
-            hintStyle: TextStyle(color: Colors.grey),
+            hintText: 'Tìm kiếm', hintStyle: TextStyle(color: Colors.grey),
             prefixIcon: Icon(Icons.search, color: Colors.grey),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           ),
         ),
       ),
@@ -477,7 +419,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
 
   Widget _buildBody(BuildContext context) {
     final List<Map<String, dynamic>> products = allProducts;
-
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -488,100 +429,49 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             children: [
               Container(
                 height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(16)),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: _bannerImages.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
+                    onPageChanged: (index) { setState(() { _currentPage = index; }); },
                     itemBuilder: (context, index) {
                       final String imageUrl = _bannerImages[index];
-                      if (imageUrl.startsWith('http')) {
-                        return Image.network(imageUrl, fit: BoxFit.cover);
-                      } else {
-                        return Image.asset(imageUrl, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(color: Colors.grey));
-                      }
+                      return imageUrl.startsWith('http') ? Image.network(imageUrl, fit: BoxFit.cover) : Image.asset(imageUrl, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(color: Colors.grey));
                     },
                   ),
                 ),
               ),
               Positioned(
-                bottom: 10,
-                left: 0,
-                right: 0,
+                bottom: 10, left: 0, right: 0,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _bannerImages.length,
-                        (index) => Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                      width: _currentPage == index ? 24.0 : 8.0,
-                      height: 8.0,
-                      decoration: BoxDecoration(
-                        color: _currentPage == index ? const Color(0xFF0857A0) : Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(4.0),
-                      ),
-                    ),
-                  ),
+                  children: List.generate(_bannerImages.length, (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                    width: _currentPage == index ? 24.0 : 8.0, height: 8.0,
+                    decoration: BoxDecoration(color: _currentPage == index ? const Color(0xFF0857A0) : Colors.grey.shade400, borderRadius: BorderRadius.circular(4.0)),
+                  )),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Mục Bán Chạy',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              TextButton(onPressed: () {}, child: const Text('Xem tất cả')),
-            ],
-          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Mục Bán Chạy', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), TextButton(onPressed: () {}, child: const Text('Xem tất cả'))]),
           const SizedBox(height: 10),
           GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
             itemCount: products.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-              childAspectRatio: 0.65,
-            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10.0, mainAxisSpacing: 10.0, childAspectRatio: 0.65),
             itemBuilder: (context, index) {
               final product = products[index];
-              final String productId = product['id'];
-              final bool isFavorite = widget.likedProductIds.contains(productId);
-
               return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailScreen(product: product),
-                    ),
-                  );
-                },
+                onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))); },
                 child: ProductCard(
-                  imageUrl: product['imageUrl'],
-                  name: product['name'],
-                  category: product['category'],
-                  price: product['price'],
-                  discount: product['discount'],
-                  discountColor: product['discountColor'],
-                  isFavorite: isFavorite,
-                  onFavoriteToggle: () {
-                    widget.onFavoriteToggle(productId);
-                  },
+                  imageUrl: product['imageUrl'], name: product['name'], category: product['category'],
+                  price: product['price'], discount: product['discount'], discountColor: product['discountColor'],
+                  isFavorite: widget.likedProductIds.contains(product['id']),
+                  onFavoriteToggle: () { widget.onFavoriteToggle(product['id']); },
                 ),
               );
             },
@@ -593,41 +483,21 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   }
 }
 
-// --- CÁC WIDGET CON ---
+// --- CÁC WIDGET CON (Giữ nguyên) ---
 class _CategoryIcon extends StatelessWidget {
-  final String imagePath;
-  final String label;
+  final String imagePath, label;
   final bool hasBackground;
-
-  const _CategoryIcon({
-    required this.imagePath,
-    required this.label,
-    this.hasBackground = true,
-  });
-
+  const _CategoryIcon({required this.imagePath, required this.label, this.hasBackground = true});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: hasBackground ? Colors.white : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Image.asset(
-            imagePath,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.error_outline, color: hasBackground ? Colors.red : Colors.white);
-            },
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
-      ],
-    );
+    return Column(children: [
+      Container(
+        width: 50, height: 50, padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: hasBackground ? Colors.white : Colors.transparent, shape: BoxShape.circle),
+        child: Image.asset(imagePath, errorBuilder: (context, error, stackTrace) => Icon(Icons.error_outline, color: hasBackground ? Colors.red : Colors.white)),
+      ),
+      const SizedBox(height: 5), Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+    ]);
   }
 }
 
@@ -636,17 +506,11 @@ class HomeClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height - 50);
-    path.quadraticBezierTo(
-      size.width / 2,
-      size.height,
-      size.width,
-      size.height - 50,
-    );
+    path.quadraticBezierTo(size.width / 2, size.height, size.width, size.height - 50);
     path.lineTo(size.width, 0);
     path.close();
     return path;
   }
-
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

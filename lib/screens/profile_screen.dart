@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
 import 'package:flutter/material.dart';
+import 'package:smartshop/screens/feedback_screen.dart';
 
 import 'edit_profile_screen.dart';
 import 'address_screen.dart';
@@ -125,6 +126,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               _buildMenuItem(context, 'Đổi mật khẩu', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+              }),
+
+              _buildMenuItem(context, 'Gửi Góp Ý & Phản Hồi', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen()));
               }),
 
               const SizedBox(height: 20),
