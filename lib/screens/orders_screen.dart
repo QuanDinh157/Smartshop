@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 List<Map<String, dynamic>> globalOrders = [];
 
@@ -10,32 +13,46 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Đơn hàng của tôi', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        title: const Text('Đơn hàng của tôi'),
         centerTitle: true,
       ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore
+            .collection('orders')
+            .where('userId', isEqualTo: _auth.currentUser?.uid)
+            .orderBy('createdAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('Chưa có đơn hàng nào.'));
+          }
 
-      body: globalOrders.isEmpty
-          ? const Center(child: Text("Bạn chưa có đơn hàng nào"))
-          : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: globalOrders.length,
-        itemBuilder: (context, index) {
+          final orders = snapshot.data!.docs;
 
-          final order = globalOrders[globalOrders.length - 1 - index];
-
-          return _buildOrderItem(order);
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              final data = orders[index].data() as Map<String, dynamic>;
+              return _buildOrderItem(data);
+            },
+          );
         },
       ),
     );
   }
+
 
   Widget _buildOrderItem(Map<String, dynamic> order) {
     Color statusColor = order['status'] == 'Đang giao' ? Colors.orange : Colors.green;
