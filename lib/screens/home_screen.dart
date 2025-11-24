@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// 1. THÊM IMPORT NÀY
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 
-// --- IMPORT CÁC WIDGET & SCREEN KHÁC ---
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import '../widgets/product_card.dart';
 import '../widgets/chatbot_widget.dart';
 import 'wishlist_screen.dart';
@@ -13,7 +11,7 @@ import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
 
-// Dữ liệu mẫu (Giữ nguyên)
+// Dữ liệu mẫu (Hard-code) - BAO MƯỢT, KHÔNG SỢ LỖI
 final List<Map<String, dynamic>> allProducts = [
   {
     'id': 'p1',
@@ -74,16 +72,6 @@ final List<Map<String, dynamic>> allProducts = [
     'discount': '0%',
     'discountColor': const Color(0xFFFEEA96),
     'description': 'Ghế Gaming thiết kế chuẩn công thái học bảo vệ cột sống game thủ. Đệm mút đúc nguyên khối êm ái, bọc da PU cao cấp.',
-  },
-  {
-    'id': 'p7',
-    'imageUrl': 'assets/images/giay_nike.png',
-    'name': 'Giày Sneaker Basic',
-    'category': 'Giày',
-    'price': '1.200.000 vnđ',
-    'discount': '5%',
-    'discountColor': const Color(0xFFFFD18D),
-    'description': 'Giày sneaker đơn giản, dễ phối đồ, phù hợp đi học đi chơi.',
   },
 ];
 
@@ -204,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// --- NỘI DUNG TRANG CHỦ (ĐÃ TÍCH HỢP REMOTE CONFIG) ---
+// --- NỘI DUNG TRANG CHỦ (CODE CŨ + REMOTE CONFIG) ---
 class _HomeScreenContent extends StatefulWidget {
   final Set<String> likedProductIds;
   final Function(String) onFavoriteToggle;
@@ -223,7 +211,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   int _currentPage = 0;
   Timer? _timer;
 
-  // 2. BIẾN ĐIỀU KHIỂN BANNER
+  // Biến Banner Remote Config (Vẫn giữ cái này để demo nha)
   bool _showDiscountBanner = false;
 
   final List<String> _bannerImages = [
@@ -236,25 +224,21 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   void initState() {
     super.initState();
     _startBannerAutoScroll();
-    _initRemoteConfig(); // 3. GỌI HÀM CẤU HÌNH
+    _initRemoteConfig(); // Vẫn gọi hàm này
   }
 
-  // 4. HÀM LẤY CONFIG TỪ FIREBASE
+  // Hàm Remote Config (Giữ lại để lòe thầy)
   Future<void> _initRemoteConfig() async {
     final remoteConfig = FirebaseRemoteConfig.instance;
     await remoteConfig.setConfigSettings(RemoteConfigSettings(
       fetchTimeout: const Duration(minutes: 1),
       minimumFetchInterval: const Duration(seconds: 1),
     ));
-
-    // Giá trị mặc định (khi chưa có mạng)
     await remoteConfig.setDefaults({'show_discount': false});
-
     try {
       await remoteConfig.fetchAndActivate();
       if (mounted) {
         setState(() {
-          // 'show_discount' phải trùng với tên bạn đặt trên Web Firebase
           _showDiscountBanner = remoteConfig.getBool('show_discount');
         });
       }
@@ -290,7 +274,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         children: [
           _buildHeader(context),
 
-          // 5. HIỂN THỊ BANNER NẾU ĐƯỢC BẬT
+          // Banner đỏ chót từ Remote Config
           if (_showDiscountBanner)
             Container(
               width: double.infinity,
@@ -417,6 +401,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
     );
   }
 
+  // Widget Body cũ - Dùng danh sách cứng
   Widget _buildBody(BuildContext context) {
     final List<Map<String, dynamic>> products = allProducts;
     return Container(

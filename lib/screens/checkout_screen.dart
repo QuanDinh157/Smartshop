@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'cart_screen.dart';
 import 'success_screen.dart';
 import 'address_screen.dart';
-import 'orders_screen.dart';
+import 'orders_screen.dart'; // Import để dùng biến toàn cục nếu cần
+import 'package:cloud_firestore/cloud_firestore.dart'; // QUAN TRỌNG: Để lưu đơn
+import 'package:firebase_auth/firebase_auth.dart';     // QUAN TRỌNG: Để lấy User ID
 
 class CheckoutScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? itemsToCheckout;
@@ -15,6 +17,12 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   String _paymentMethod = "Master Card";
   int _selectedAddressIndex = 0;
+
+  // Khởi tạo Firebase
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+
+  bool _isLoading = false; // Biến để hiện vòng xoay khi đang lưu
 
   List<Map<String, dynamic>> get _currentItems {
     return widget.itemsToCheckout ?? globalCartItems;
@@ -36,9 +44,80 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return "${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} vnđ";
   }
 
+  // --- HÀM XỬ LÝ THANH TOÁN & LƯU FIREBASE ---
+  void _handlePayment() async {
+    // 1. Kiểm tra địa chỉ
+    if (globalAddresses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng thêm địa chỉ giao hàng!')));
+      return;
+    }
+
+    // 2. Kiểm tra đăng nhập
+    final user = _auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập để thanh toán!')));
+      return;
+    }
+
+    setState(() => _isLoading = true); // Bắt đầu xoay
+
+    try {
+      final currentAddress = globalAddresses[_selectedAddressIndex];
+
+      // 3. Tạo dữ liệu đơn hàng chuẩn
+      final newOrder = {
+        'userId': user.uid,
+        'email': user.email,
+        'status': 'Đang xử lý',
+        'total': formatMoney(_total), // Tổng tiền dạng chuỗi
+        'rawTotal': _total,           // Tổng tiền dạng số
+        'date': DateTime.now().toString().split('.')[0],
+        'createdAt': FieldValue.serverTimestamp(), // Giờ Server
+        'paymentMethod': _paymentMethod,
+        'address': '${currentAddress['address']}, ${currentAddress['city']}',
+        'phone': currentAddress['phone'],
+        'receiverName': currentAddress['name'],
+
+        // Danh sách sản phẩm
+        'items': _currentItems.map((item) => {
+          'productId': item['product']['id'],
+          'name': item['product']['name'],       // Lưu tên trực tiếp để dễ lấy
+          'price': item['product']['price'],
+          'quantity': item['quantity'],
+          'image': item['product']['imageUrl'],
+          'size': item['size'] ?? 'M',
+          'color': item['color']?.value ?? 0,
+        }).toList(),
+      };
+
+      // 4. Gửi lên Firestore
+      await _firestore.collection('orders').add(newOrder);
+
+      // 5. Xử lý sau khi lưu thành công
+      // Nếu mua từ giỏ hàng thì xóa giỏ hàng đi
+      if (widget.itemsToCheckout == null) {
+        setState(() {
+          globalCartItems.clear();
+        });
+      }
+
+      if (mounted) {
+        // Chuyển sang màn hình thành công
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SuccessScreen()),
+        );
+      }
+    } catch (e) {
+      print("Lỗi thanh toán: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false); // Tắt xoay
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
     final currentAddress = globalAddresses.isNotEmpty
         ? globalAddresses[_selectedAddressIndex]
         : null;
@@ -52,19 +131,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator()) // Hiện vòng xoay khi đang lưu
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
+            // Danh sách sản phẩm
             ..._currentItems.map((item) => Container(
               margin: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(item['product']['imageUrl'], width: 60, height: 60, fit: BoxFit.cover),
+                    child: (item['product']['imageUrl'].toString().startsWith('http'))
+                        ? Image.network(item['product']['imageUrl'], width: 60, height: 60, fit: BoxFit.cover)
+                        : Image.asset(item['product']['imageUrl'], width: 60, height: 60, fit: BoxFit.cover),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -74,7 +157,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Text(item['product']['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text('${item['quantity']} x ${item['product']['price']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                         if (item['size'] != null)
-                          Text('Size: ${item['size']} | Màu: ${_getColorName(item['color'])}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                          Text('Size: ${item['size']}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                       ],
                     ),
                   ),
@@ -84,44 +167,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             )).toList(),
 
             const SizedBox(height: 20),
-            // Mã giảm giá
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Mã giảm giá',
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade300, foregroundColor: Colors.black),
-                  child: const Text('Apply'),
-                )
-              ],
-            ),
-            const SizedBox(height: 20),
+            const Divider(),
 
+            // Tổng tiền
             _buildRowSummary('Tổng tiền', formatMoney(_subTotal)),
             _buildRowSummary('Phí giao hàng', formatMoney(_shippingFee)),
-            _buildRowSummary('Thuế', '0'),
             const Divider(height: 30),
             _buildRowSummary('Tổng Hoá Đơn', formatMoney(_total), isBold: true),
             const SizedBox(height: 30),
 
+            // Phương thức thanh toán
             _buildSectionHeader('Phương thức thanh toán', () => _showPaymentBottomSheet(context)),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(10)),
               child: Row(
                 children: [
-                  Icon(Icons.credit_card, color: Colors.orange, size: 30),
+                  const Icon(Icons.credit_card, color: Colors.orange, size: 30),
                   const SizedBox(width: 12),
                   Text(_paymentMethod, style: const TextStyle(fontWeight: FontWeight.bold)),
                   const Spacer(),
@@ -131,6 +193,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Địa chỉ
             _buildSectionHeader('Địa chỉ giao hàng', () => _showAddressBottomSheet(context)),
             Container(
               padding: const EdgeInsets.all(12),
@@ -159,41 +222,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         child: ElevatedButton(
-          onPressed: () {
-
-            if (globalAddresses.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng thêm địa chỉ giao hàng!')));
-              return;
-            }
-
-            final newOrder = {
-              'id': 'DH-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-              'date': DateTime.now().toString().split('.')[0],
-              'status': 'Đang giao',
-              'total': formatMoney(_total),
-              'items': List.from(_currentItems),
-            };
-            globalOrders.add(newOrder);
-
-
-            setState(() {
-              if (widget.itemsToCheckout == null) {
-                globalCartItems.clear();
-              }
-            });
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SuccessScreen()));
-          },
+          onPressed: _isLoading ? null : _handlePayment, // Gọi hàm thanh toán
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF0857A0),
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: Text('Thanh toán ${formatMoney(_total)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: Text(
+              _isLoading ? 'Đang xử lý...' : 'Thanh toán ${formatMoney(_total)}',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+          ),
         ),
       ),
     );
   }
 
+  // --- CÁC HÀM PHỤ TRỢ ---
   String _getColorName(Color color) {
     if (color == Colors.black) return "Đen";
     if (color == Colors.grey) return "Xám";
@@ -260,7 +304,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-
   void _showAddressBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -305,11 +348,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   },
                 ),
               ),
-
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const AddressListScreen())).then((_) {
                     setState(() {});
                   });
