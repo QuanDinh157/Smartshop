@@ -3,6 +3,8 @@ import 'cart_screen.dart';
 import 'success_screen.dart';
 import 'address_screen.dart';
 import 'orders_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? itemsToCheckout;
@@ -14,6 +16,8 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   String _paymentMethod = "Master Card";
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   int _selectedAddressIndex = 0;
 
   List<Map<String, dynamic>> get _currentItems {
@@ -159,29 +163,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         child: ElevatedButton(
-          onPressed: () {
-
+          onPressed: () async {
             if (globalAddresses.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng thêm địa chỉ giao hàng!')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Vui lòng thêm địa chỉ giao hàng!')),
+              );
               return;
             }
 
+            final user = _auth.currentUser;
+            if (user == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Vui lòng đăng nhập trước khi đặt hàng!')),
+              );
+              return;
+            }
+
+            // Tạo dữ liệu đơn hàng (giữ format giống cũ để OrdersScreen dùng lại)
             final newOrder = {
               'id': 'DH-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
               'date': DateTime.now().toString().split('.')[0],
               'status': 'Đang giao',
-              'total': formatMoney(_total),
-              'items': List.from(_currentItems),
+              'total': formatMoney(_total),             // Chuỗi đã format tiền
+              'rawTotal': _total,                       // Số double để thống kê nếu cần
+              'items': _currentItems.map((item) => {
+                'productId': item['product']['id'],
+                'name': item['product']['name'],
+                'price': item['product']['price'],
+                'quantity': item['quantity'],
+                'size': item['size'],
+                'color': item['color'],
+              }).toList(),
+              'address': globalAddresses[_selectedAddressIndex],
+              'userId': user.uid,
+              'createdAt': FieldValue.serverTimestamp(),
             };
-            globalOrders.add(newOrder);
 
+            // (Có thể giữ lại dòng này nếu bạn muốn debug local)
+            // globalOrders.add(newOrder);
+
+            // Lưu lên Firestore
+            await _firestore.collection('orders').add(newOrder);
 
             setState(() {
               if (widget.itemsToCheckout == null) {
                 globalCartItems.clear();
               }
             });
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SuccessScreen()));
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SuccessScreen()),
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF0857A0),
